@@ -25,7 +25,7 @@ void main() {
   });
 
   test(
-    'Should call HttpClient with correct values',
+    'Should call [HttpClient] with correct values',
     () async {
       //assert
 
@@ -47,7 +47,7 @@ void main() {
   );
 
   test(
-    'Should throw UnexpectedError if HttpClient returns 400',
+    'Should throw [unexpected] if HttpClient returns 400',
     () async {
       //assert
       when(
@@ -63,12 +63,12 @@ void main() {
       final response = sut.auth(params);
 
       // expect
-      expect(response, throwsA(DomainError.unexpectedError));
+      expect(response, throwsA(DomainError.unexpected));
     },
   );
 
   test(
-    'Should throw UnexpectedError if HttpClient returns 404',
+    'Should throw [unexpected] if HttpClient returns 404',
     () async {
       //assert
       when(
@@ -84,7 +84,49 @@ void main() {
       final response = sut.auth(params);
 
       // expect
-      expect(response, throwsA(DomainError.unexpectedError));
+      expect(response, throwsA(DomainError.unexpected));
+    },
+  );
+
+  test(
+    'Should throw [unexpected] if HttpClient returns 500',
+    () async {
+      //assert
+      when(
+        httpClient.request(
+          url: anyNamed('url'),
+          method: anyNamed('method'),
+          body: anyNamed('body'),
+        ),
+      ).thenThrow(HttpError.serverError);
+
+      //act
+
+      final response = sut.auth(params);
+
+      // expect
+      expect(response, throwsA(DomainError.unexpected));
+    },
+  );
+
+  test(
+    'Should throw [InvalidCredentialsError] if HttpClient returns 401',
+    () async {
+      //assert
+      when(
+        httpClient.request(
+          url: anyNamed('url'),
+          method: anyNamed('method'),
+          body: anyNamed('body'),
+        ),
+      ).thenThrow(HttpError.unauthorized);
+
+      //act
+
+      final response = sut.auth(params);
+
+      // expect
+      expect(response, throwsA(DomainError.invalidCredentials));
     },
   );
 }
