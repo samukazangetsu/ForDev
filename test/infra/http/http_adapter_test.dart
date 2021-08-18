@@ -30,7 +30,7 @@ class HttpAdapter implements HttpClient {
       headers: headers,
       body: jsonParsedBody,
     );
-    return jsonDecode(response.body);
+    return response.body.isEmpty ? null : jsonDecode(response.body);
   }
 }
 
@@ -103,6 +103,20 @@ void main() {
 
           //act
           expect(response, {'any_key': 'any_value'});
+        },
+      );
+
+      test(
+        'Should return null if post resturns 200 without data',
+        () async {
+          //arange
+          when(client.post(any, headers: anyNamed('headers')))
+              .thenAnswer((_) async => Response('', 200));
+          //assert
+          final response = await sut.request(url: url, method: 'post');
+
+          //act
+          expect(response, null);
         },
       );
     },
