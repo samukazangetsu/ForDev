@@ -7,11 +7,13 @@ import 'package:test/test.dart';
 
 import 'package:meta/meta.dart';
 
-class HttpAdapter {
+import 'package:for_dev/core/http/http_client.dart';
+
+class HttpAdapter implements HttpClient {
   final Client client;
 
   HttpAdapter(this.client);
-  Future<void> request({
+  Future<Map> request({
     @required String url,
     @required String method,
     Map body,
@@ -23,11 +25,12 @@ class HttpAdapter {
     };
     final jsonParsedBody = body != null ? jsonEncode(body) : null;
 
-    await client.post(
+    final response = await client.post(
       uri,
       headers: headers,
       body: jsonParsedBody,
     );
+    return jsonDecode(response.body);
   }
 }
 
@@ -50,6 +53,11 @@ void main() {
         'Should call post with correct values',
         () async {
           //arange
+          when(client.post(
+            any,
+            body: anyNamed('body'),
+            headers: anyNamed('headers'),
+          )).thenAnswer((_) async => Response('{"any_key":"any_value"}', 200));
 
           //assert
           await sut.request(
@@ -71,6 +79,8 @@ void main() {
         'Should call post without body with correct values',
         () async {
           //arange
+          when(client.post(any, headers: anyNamed('headers'))).thenAnswer(
+              (_) async => Response('{"any_key":"any_value"}', 200));
 
           //assert
           await sut.request(url: url, method: 'post');
@@ -79,6 +89,20 @@ void main() {
           verify(
             client.post(Uri.parse(url), headers: anyNamed('headers')),
           );
+        },
+      );
+
+      test(
+        'Should return data if post resturns 200',
+        () async {
+          //arange
+          when(client.post(any, headers: anyNamed('headers'))).thenAnswer(
+              (_) async => Response('{"any_key":"any_value"}', 200));
+          //assert
+          final response = await sut.request(url: url, method: 'post');
+
+          //act
+          expect(response, {'any_key': 'any_value'});
         },
       );
     },
